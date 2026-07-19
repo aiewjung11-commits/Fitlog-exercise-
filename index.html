@@ -55,6 +55,7 @@ h2 .mini{font-size:.72rem;color:var(--muted);font-weight:400}
 .wchart{margin:6px 0 4px}
 .wchart svg{width:100%;height:110px;display:block}
 .wempty{font-size:.78rem;color:var(--muted);text-align:center;padding:12px 0}
+.sharebtn{border:none;background:#eef3fb;color:var(--navy);border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:600;cursor:pointer}
 .cbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
 .cbar .seg{width:100%;background:var(--blue);border-radius:3px 3px 0 0}
 .cbar .day{font-size:.58rem;color:var(--muted);margin-top:4px}
@@ -133,7 +134,7 @@ input:focus,select:focus{outline:none;border-color:var(--blue)}
 
   <!-- weight tracking -->
   <div class="card">
-    <h2>⚖️ น้ำหนักตัว <span class="mini" id="wTotal"></span></h2>
+    <h2>⚖️ น้ำหนักตัว <span style="display:flex;gap:8px;align-items:center"><span class="mini" id="wTotal"></span><button class="sharebtn" onclick="shareWeight()">📤 แชร์</button></span></h2>
     <div class="wtop">
       <div class="wnow"><span id="wNow">–</span> <small>กก.</small></div>
       <div class="wchg" id="wChg"></div>
@@ -313,17 +314,41 @@ async function makeCard(opt){
   // name
   ctx.fillStyle='#fff'; ctx.font='600 54px '+FONT;
   ctx.fillText(data.name, W/2, 430);
-  // big number
-  ctx.font='700 170px '+FONT;
-  ctx.fillText(opt.big, W/2, 620);
-  ctx.font='400 56px '+FONT; ctx.fillStyle='rgba(255,255,255,.9)';
-  ctx.fillText(opt.unit, W/2, 690);
-  // sub line (activity / month)
-  ctx.font='600 58px '+FONT; ctx.fillStyle='#fff';
-  ctx.fillText(opt.sub, W/2, 790);
+  if(opt.chart && opt.chart.length>1){
+    // layout แบบมีกราฟแนวโน้ม
+    ctx.font='700 150px '+FONT;
+    ctx.fillText(opt.big, W/2, 590);
+    ctx.font='400 52px '+FONT; ctx.fillStyle='rgba(255,255,255,.9)';
+    ctx.fillText(opt.unit, W/2, 655);
+    ctx.font='600 48px '+FONT; ctx.fillStyle='#3ee88f';
+    ctx.fillText(opt.sub, W/2, 720);
+    // polyline
+    const pts=opt.chart;
+    let mn=Math.min(...pts), mx=Math.max(...pts);
+    if(mx-mn<1){ const m=(mx+mn)/2; mn=m-0.6; mx=m+0.6; }
+    const CX=i=> 200 + i*(W-400)/(pts.length-1);
+    const CY=v=> 755 + (mx-v)*(835-755)/(mx-mn);
+    ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=5;
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath();
+    pts.forEach((v,i)=>{ i===0 ? ctx.moveTo(CX(i),CY(v)) : ctx.lineTo(CX(i),CY(v)); });
+    ctx.stroke();
+    // จุดสุดท้ายเน้นสีเขียว
+    ctx.fillStyle='#3ee88f';
+    ctx.beginPath(); ctx.arc(CX(pts.length-1), CY(pts[pts.length-1]), 10, 0, 7); ctx.fill();
+  } else {
+    // big number
+    ctx.font='700 170px '+FONT;
+    ctx.fillText(opt.big, W/2, 620);
+    ctx.font='400 56px '+FONT; ctx.fillStyle='rgba(255,255,255,.9)';
+    ctx.fillText(opt.unit, W/2, 690);
+    // sub line (activity / month)
+    ctx.font='600 58px '+FONT; ctx.fillStyle='#fff';
+    ctx.fillText(opt.sub, W/2, 790);
+  }
   // divider
   ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(180,840); ctx.lineTo(W-180,840); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(180,860); ctx.lineTo(W-180,860); ctx.stroke();
   // stats columns
   const n=opt.stats.length, colW=(W-240)/n;
   const vf = n>=4 ? 52 : 62, lf = n>=4 ? 32 : 36;
@@ -368,6 +393,30 @@ async function shareMonth(){
     sub: 'สะสม '+thaiMonth(todayStr().slice(0,7)),
     stats,
     footer: thaiDate(todayStr())
+  });
+  doShare(cv);
+}
+
+async function shareWeight(){
+  const ws=data.weights;
+  if(!ws.length){ toast('ยังไม่มีข้อมูลน้ำหนัก'); return; }
+  const st=calcStats();
+  const cur=ws[ws.length-1];
+  const t=Math.round((cur.kg-ws[0].kg)*10)/10;
+  const sub = t<0 ? '▼ ลดไป '+Math.abs(t).toFixed(1)+' กก.'
+            : t>0 ? '▲ เพิ่ม '+t.toFixed(1)+' กก.'
+            : 'น้ำหนักคงที่';
+  const cv=await makeCard({
+    big: cur.kg.toFixed(1),
+    unit: 'กก.',
+    sub,
+    chart: ws.slice(-20).map(p=>p.kg),
+    stats: [
+      {v:ws[0].kg.toFixed(1), l:'เริ่มต้น (กก.)'},
+      {v:(t>0?'+':'')+t.toFixed(1), l:'เปลี่ยนแปลง (กก.)'},
+      {v:st.monthMin.toLocaleString(), l:'นาที เดือนนี้'}
+    ],
+    footer: thaiDate(ws[0].date)+' – '+thaiDate(cur.date)
   });
   doShare(cv);
 }
