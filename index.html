@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FitLog</title>
+<meta name="theme-color" content="#0a2d6e">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f0f6ff; --navy:#0a2d6e; --blue:#1a5fd4; --card:#ffffff;
+  --text:#12233f; --muted:#6b7f9e; --line:#dbe7fa; --danger:#d43a3a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);color:var(--text);padding-bottom:40px}
+.topbar{background:linear-gradient(135deg,#0a2d6e,#1a5fd4);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px rgba(10,45,110,.25)}
+.topbar h1{font-size:1.15rem}
+.topbar .sub{font-size:.75rem;opacity:.85;margin-top:2px}
+.wrap{max-width:520px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 4px rgba(10,45,110,.06)}
+h2{font-size:.95rem;color:var(--navy);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+h2 .mini{font-size:.72rem;color:var(--muted);font-weight:400}
+
+.hero{background:linear-gradient(135deg,#0a2d6e,#1a5fd4);color:#fff;border:none}
+.hero .who{font-size:.8rem;opacity:.95;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.prof{width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;cursor:pointer}
+.prof img{width:100%;height:100%;object-fit:cover;display:none}
+.prof span{font-size:1.2rem}
+.hero .who button{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;padding:2px 8px;font-size:.7rem}
+.hero .big{font-size:2.2rem;font-weight:700;line-height:1.1;margin-top:4px}
+.hero .big small{font-size:1rem;font-weight:400;opacity:.85}
+.hero .label{font-size:.78rem;opacity:.85;margin-top:2px}
+.goalbar{background:rgba(255,255,255,.25);border-radius:99px;height:10px;margin-top:10px;overflow:hidden}
+.goalbar>div{height:100%;background:#3ee88f;border-radius:99px;transition:width .5s}
+.goaltxt{font-size:.72rem;opacity:.9;margin-top:6px;display:flex;justify-content:space-between}
+.goaltxt button{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;padding:2px 8px;font-size:.7rem}
+
+.statrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.stat{background:#f7faff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat .v{font-size:1.2rem;font-weight:700;color:var(--navy)}
+.stat .l{font-size:.68rem;color:var(--muted);margin-top:2px}
+
+.chart{display:flex;align-items:flex-end;gap:4px;height:120px;margin-top:6px}
+
+/* weight */
+.wtop{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.wnow{font-size:1.9rem;font-weight:700;color:var(--navy)}
+.wnow small{font-size:.85rem;font-weight:400;color:var(--muted)}
+.wchg{font-size:.85rem;font-weight:600;padding:3px 10px;border-radius:99px}
+.wchg.down{background:#e2f8ee;color:#0a8a5c}
+.wchg.up{background:#fdeaea;color:#c23434}
+.wchg.same{background:#eef3fb;color:var(--muted)}
+.wchart{margin:6px 0 4px}
+.wchart svg{width:100%;height:110px;display:block}
+.wempty{font-size:.78rem;color:var(--muted);text-align:center;padding:12px 0}
+.cbar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.cbar .seg{width:100%;background:var(--blue);border-radius:3px 3px 0 0}
+.cbar .day{font-size:.58rem;color:var(--muted);margin-top:4px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.chip{border:1.5px solid var(--line);background:#f7faff;color:var(--text);border-radius:99px;padding:7px 14px;font-size:.85rem;cursor:pointer}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:.72rem;color:var(--muted);display:block;margin:8px 0 4px}
+input,select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-size:1rem;background:#fff;color:var(--text)}
+input:focus,select:focus{outline:none;border-color:var(--blue)}
+.btn{width:100%;background:linear-gradient(135deg,#0a2d6e,#1a5fd4);color:#fff;border:none;border-radius:12px;padding:13px;font-size:1rem;font-weight:600;margin-top:14px;cursor:pointer}
+.btn:active{opacity:.85}
+
+.hitem{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.hitem:last-child{border-bottom:none}
+.badge{width:8px;height:34px;border-radius:4px;flex:none;background:var(--blue)}
+.hmain{flex:1;min-width:0}
+.hmain .t1{font-size:.88rem;font-weight:600}
+.hmain .t2{font-size:.72rem;color:var(--muted)}
+.hval{text-align:right;font-size:.85rem;font-weight:600;color:var(--navy)}
+.hval small{display:block;font-weight:400;color:var(--muted);font-size:.7rem}
+.del{border:none;background:none;color:var(--danger);font-size:1rem;padding:4px 6px;cursor:pointer}
+.empty{text-align:center;color:var(--muted);font-size:.85rem;padding:16px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;font-size:.85rem;opacity:0;transition:.3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+.tools{display:flex;gap:10px}
+.tools button{flex:1;border:1.5px solid var(--line);background:#f7faff;color:var(--navy);border-radius:10px;padding:9px;font-size:.8rem;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>💪 FitLog</h1>
+  <div class="sub">สะสมนาทีออกกำลังกาย — ข้อมูลเก็บในเครื่องนี้เท่านั้น</div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="card hero">
+    <div class="who">
+      <div class="prof" onclick="document.getElementById('photoFile').click()" title="แตะเพื่อเปลี่ยนรูป">
+        <img id="avatar" alt="">
+        <span id="avatarPh">📷</span>
+      </div>
+      <span id="userName" style="flex:1;font-size:1rem;font-weight:600">ของฉัน</span>
+      <button onclick="editName()">✎ ชื่อ</button>
+    </div>
+    <input type="file" id="photoFile" accept="image/*" style="display:none" onchange="setPhoto(this)">
+    <div class="big"><span id="heroMin">0</span> <small>นาที</small> · <span id="heroCnt">0</span> <small>ครั้ง</small></div>
+    <div class="label" id="heroMonth">สะสมเดือนนี้</div>
+    <div class="goalbar"><div id="goalFill" style="width:0%"></div></div>
+    <div class="goaltxt">
+      <span id="goalTxt">เป้าหมาย 600 นาที/เดือน</span>
+      <button onclick="editGoal()">แก้เป้า</button>
+    </div>
+  </div>
+
+  <!-- quick stats -->
+  <div class="card">
+    <h2>ภาพรวม</h2>
+    <div class="statrow">
+      <div class="stat"><div class="v" id="stWeek">0</div><div class="l">นาที สัปดาห์นี้</div></div>
+      <div class="stat"><div class="v" id="stStreak">0</div><div class="l">วันติดต่อกัน 🔥</div></div>
+      <div class="stat"><div class="v" id="stAll">0</div><div class="l">นาที ทั้งหมด</div></div>
+    </div>
+    <button class="btn" style="margin-top:12px" onclick="shareMonth()">📤 แชร์สรุปเดือนนี้ลงโซเชียล</button>
+  </div>
+
+  <!-- chart -->
+  <div class="card">
+    <h2>14 วันล่าสุด <span class="mini">นาที/วัน</span></h2>
+    <div class="chart" id="chart"></div>
+  </div>
+
+  <!-- weight tracking -->
+  <div class="card">
+    <h2>⚖️ น้ำหนักตัว <span class="mini" id="wTotal"></span></h2>
+    <div class="wtop">
+      <div class="wnow"><span id="wNow">–</span> <small>กก.</small></div>
+      <div class="wchg" id="wChg"></div>
+    </div>
+    <div id="wChart" class="wchart"></div>
+    <div class="grid2">
+      <div><label>น้ำหนัก (กก.)</label><input type="number" id="inW" step="0.1" inputmode="decimal" placeholder="เช่น 68.5"></div>
+      <div><label>วันที่</label><input type="date" id="inWDate"></div>
+    </div>
+    <button class="btn" onclick="addWeight()">＋ บันทึกน้ำหนัก</button>
+    <div id="wHist"></div>
+  </div>
+
+  <!-- form -->
+  <div class="card">
+    <h2>บันทึกการออกกำลังกาย</h2>
+    <label>กิจกรรม</label>
+    <div class="chips" id="actChips"></div>
+    <div class="grid2">
+      <div><label>นาที</label><input type="number" id="inMin" inputmode="numeric" placeholder="เช่น 30"></div>
+      <div><label>จำนวนครั้ง/เซ็ต (ถ้ามี)</label><input type="number" id="inCount" inputmode="numeric" placeholder="เช่น 3"></div>
+    </div>
+    <label>วันที่</label>
+    <input type="date" id="inDate">
+    <button class="btn" onclick="addEntry()">＋ บันทึก</button>
+  </div>
+
+  <!-- history -->
+  <div class="card">
+    <h2>ประวัติ <select id="monthSel" onchange="renderHistory()" style="width:auto;font-size:.8rem;padding:4px 8px"></select></h2>
+    <div id="history"><div class="empty">ยังไม่มีข้อมูล</div></div>
+  </div>
+
+  <!-- backup -->
+  <div class="card">
+    <h2>สำรองข้อมูล <span class="mini">กันข้อมูลหายถ้าล้างเครื่อง</span></h2>
+    <div class="tools">
+      <button onclick="exportData()">⬇ Export (.json)</button>
+      <button onclick="document.getElementById('importFile').click()">⬆ Import</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   FitLog Solo — เก็บข้อมูลใน localStorage ของเครื่องนี้เท่านั้น
+   ไม่ต้องตั้งค่าอะไรเลย เปิดใช้ได้ทันที
+   ================================================================ */
+const KEY = 'fitlog-solo';
+const ACTIVITIES = ['เดิน 🚶','วิ่ง 🏃','ปั่นจักรยาน 🚴','เวทเทรนนิ่ง 🏋️','วิดพื้น 💪','ซิทอัพ 🔥','สควอท 🦵','แพลงกิ้ง 🤸','โยคะ 🧘','ว่ายน้ำ 🏊','แบดมินตัน 🏸','อื่นๆ ✨'];
+
+let data = load();
+function load(){
+  try{ return JSON.parse(localStorage.getItem(KEY)) || {} }catch{ return {} }
+}
+data.name = data.name || 'ของฉัน';
+data.goal = data.goal || 600;
+data.entries = data.entries || [];   // [{id, activity, minutes, count, date, ts}]
+data.weights = data.weights || [];   // [{id, kg, date, ts}]
+function save(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+
+let curAct = ACTIVITIES[0];
+const $ = id => document.getElementById(id);
+$('inDate').value = todayStr();
+$('inWDate').value = todayStr();
+
+const actWrap = $('actChips');
+ACTIVITIES.forEach((a,i)=>{
+  const b=document.createElement('button');
+  b.className='chip'+(i===0?' on':''); b.textContent=a;
+  b.onclick=()=>{ curAct=a; [...actWrap.children].forEach(c=>c.classList.remove('on')); b.classList.add('on'); };
+  actWrap.appendChild(b);
+});
+
+/* ---------- actions ---------- */
+function addEntry(){
+  const min = parseInt($('inMin').value);
+  if(!min || min<=0){ toast('กรุณาใส่จำนวนนาที'); return; }
+  data.entries.push({
+    id: Date.now()+''+Math.floor(Math.random()*999),
+    activity: curAct,
+    minutes: min,
+    count: parseInt($('inCount').value) || 0,
+    date: $('inDate').value || todayStr(),
+    ts: Date.now()
+  });
+  save(); toast('บันทึกแล้ว 💪');
+  $('inMin').value=''; $('inCount').value='';
+  buildMonthOptions(); renderAll();
+}
+
+function delEntry(id){
+  if(!confirm('ลบรายการนี้?')) return;
+  data.entries = data.entries.filter(e=>e.id!==id);
+  save(); toast('ลบแล้ว'); buildMonthOptions(); renderAll();
+}
+
+function editName(){
+  const n = prompt('ชื่อของคุณ', data.name);
+  if(n && n.trim()){ data.name=n.trim(); save(); renderAll(); }
+}
+
+function setPhoto(input){
+  const f = input.files[0]; if(!f) return;
+  const img = new Image();
+  img.onload = ()=>{
+    // ย่อรูปเป็นสี่เหลี่ยมจัตุรัส 256px เพื่อประหยัดพื้นที่ localStorage
+    const size = 256;
+    const cv = document.createElement('canvas'); cv.width = size; cv.height = size;
+    const ctx = cv.getContext('2d');
+    const s = Math.min(img.width, img.height);
+    const sx = (img.width - s)/2, sy = (img.height - s)/2;
+    ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+    data.photo = cv.toDataURL('image/jpeg', 0.82);
+    save(); renderAvatar(); toast('เปลี่ยนรูปแล้ว 📷');
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+  input.value = '';
+}
+
+function renderAvatar(){
+  const im = $('avatar'), ph = $('avatarPh');
+  if(data.photo){ im.src = data.photo; im.style.display='block'; ph.style.display='none'; }
+  else { im.style.display='none'; ph.style.display='block'; }
+}
+
+/* ---------- share card (โพสลงโซเชียล) ---------- */
+function calcStats(){
+  const ym = todayStr().slice(0,7);
+  let m=0,c=0;
+  data.entries.forEach(e=>{ if(e.date.startsWith(ym)){ m+=e.minutes; c++; } });
+  const days=new Set(data.entries.map(e=>e.date));
+  let streak=0; const d=new Date();
+  if(!days.has(dstr(d))) d.setDate(d.getDate()-1);
+  while(days.has(dstr(d))){ streak++; d.setDate(d.getDate()-1); }
+  return {monthMin:m, monthCnt:c, streak, pct:Math.min(100,Math.round(m/data.goal*100))};
+}
+
+function loadImg(src){
+  return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; });
+}
+
+async function makeCard(opt){
+  const W=1080,H=1080;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  const FONT='"Segoe UI","Sarabun",system-ui,sans-serif';
+  // background gradient
+  const g=ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#0a2d6e'); g.addColorStop(1,'#1a5fd4');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // decorative circles
+  ctx.fillStyle='rgba(255,255,255,0.06)';
+  ctx.beginPath(); ctx.arc(W*0.92,H*0.10,230,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(W*0.06,H*0.94,270,0,7); ctx.fill();
+  ctx.textAlign='center';
+  // brand
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.font='600 42px '+FONT;
+  ctx.fillText('💪 FitLog', W/2, 95);
+  // avatar
+  if(data.photo){
+    try{
+      const im=await loadImg(data.photo);
+      ctx.save(); ctx.beginPath(); ctx.arc(W/2,255,95,0,7); ctx.clip();
+      ctx.drawImage(im, W/2-95, 160, 190, 190); ctx.restore();
+      ctx.lineWidth=6; ctx.strokeStyle='rgba(255,255,255,.8)';
+      ctx.beginPath(); ctx.arc(W/2,255,95,0,7); ctx.stroke();
+    }catch(e){}
+  } else {
+    ctx.font='120px '+FONT; ctx.fillText('🏃', W/2, 300);
+  }
+  // name
+  ctx.fillStyle='#fff'; ctx.font='600 54px '+FONT;
+  ctx.fillText(data.name, W/2, 430);
+  // big number
+  ctx.font='700 170px '+FONT;
+  ctx.fillText(opt.big, W/2, 620);
+  ctx.font='400 56px '+FONT; ctx.fillStyle='rgba(255,255,255,.9)';
+  ctx.fillText(opt.unit, W/2, 690);
+  // sub line (activity / month)
+  ctx.font='600 58px '+FONT; ctx.fillStyle='#fff';
+  ctx.fillText(opt.sub, W/2, 790);
+  // divider
+  ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(180,840); ctx.lineTo(W-180,840); ctx.stroke();
+  // stats columns
+  const n=opt.stats.length, colW=(W-240)/n;
+  opt.stats.forEach((s,i)=>{
+    const x=120+colW*i+colW/2;
+    ctx.font='700 62px '+FONT; ctx.fillStyle='#fff';
+    ctx.fillText(String(s.v), x, 930);
+    ctx.font='400 36px '+FONT; ctx.fillStyle='rgba(255,255,255,.8)';
+    ctx.fillText(s.l, x, 980);
+  });
+  // footer date
+  ctx.font='400 36px '+FONT; ctx.fillStyle='rgba(255,255,255,.7)';
+  ctx.fillText(opt.footer, W/2, 1040);
+  return cv;
+}
+
+async function doShare(cv){
+  cv.toBlob(async blob=>{
+    const file=new File([blob],'fitlog-share.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:'FitLog', text:'ผลออกกำลังกายของฉัน 💪'}); return; }
+      catch(e){ if(e.name==='AbortError') return; }
+    }
+    // fallback: download PNG
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download='fitlog-share.png'; a.click();
+    toast('บันทึกรูปแล้ว นำไปโพสได้เลย 📤');
+  },'image/png');
+}
+
+async function shareMonth(){
+  const st=calcStats();
+  const stats=[
+    {v:st.monthCnt, l:'ครั้ง'},
+    {v:'🔥 '+st.streak, l:'วันติดต่อกัน'},
+    {v:st.pct+'%', l:'ของเป้าหมาย'}
+  ];
+  if(data.weights.length) stats.push({v:data.weights[data.weights.length-1].kg.toFixed(1), l:'กก. ล่าสุด'});
+  const cv=await makeCard({
+    big: st.monthMin.toLocaleString(),
+    unit: 'นาที',
+    sub: 'สะสม '+thaiMonth(todayStr().slice(0,7)),
+    stats,
+    footer: thaiDate(todayStr())
+  });
+  doShare(cv);
+}
+
+async function shareEntry(id){
+  const e=data.entries.find(x=>x.id===id); if(!e) return;
+  const st=calcStats();
+  const cv=await makeCard({
+    big: e.minutes.toLocaleString(),
+    unit: 'นาที',
+    sub: e.activity,
+    stats: [
+      {v:e.count||'–', l:'ครั้ง/เซ็ต'},
+      {v:st.monthMin.toLocaleString(), l:'นาที เดือนนี้'},
+      {v:'🔥 '+st.streak, l:'วันติดต่อกัน'}
+    ],
+    footer: thaiDate(e.date)
+  });
+  doShare(cv);
+}
+
+function editGoal(){
+  const v = parseInt(prompt('เป้าหมาย (นาที/เดือน)', data.goal));
+  if(v && v>0){ data.goal=v; save(); renderAll(); }
+}
+
+/* ---------- weight ---------- */
+function addWeight(){
+  const kg = parseFloat($('inW').value);
+  if(!kg || kg<=0){ toast('กรุณาใส่น้ำหนัก'); return; }
+  const date = $('inWDate').value || todayStr();
+  data.weights = data.weights.filter(w=>w.date!==date); // วันเดียวกันบันทึกซ้ำ = อัปเดตทับ
+  data.weights.push({ id: Date.now()+''+Math.floor(Math.random()*999), kg: Math.round(kg*10)/10, date, ts: Date.now() });
+  data.weights.sort((a,b)=>a.date.localeCompare(b.date));
+  save(); toast('บันทึกน้ำหนักแล้ว ⚖️');
+  $('inW').value='';
+  renderWeight();
+}
+
+function delWeight(id){
+  if(!confirm('ลบรายการน้ำหนักนี้?')) return;
+  data.weights = data.weights.filter(w=>w.id!==id);
+  save(); toast('ลบแล้ว'); renderWeight();
+}
+
+function renderWeight(){
+  const ws = data.weights;
+  const now=$('wNow'), chg=$('wChg'), tot=$('wTotal'), chart=$('wChart'), hist=$('wHist');
+  if(!ws.length){
+    now.textContent='–'; chg.textContent=''; chg.className='wchg'; tot.textContent='';
+    chart.innerHTML='<div class="wempty">บันทึกน้ำหนักครั้งแรกเพื่อเริ่มดูแนวโน้ม</div>';
+    hist.innerHTML='';
+    return;
+  }
+  const cur = ws[ws.length-1];
+  now.textContent = cur.kg.toFixed(1);
+  // เทียบครั้งก่อนหน้า
+  if(ws.length>1){
+    const d = Math.round((cur.kg - ws[ws.length-2].kg)*10)/10;
+    if(d<0){ chg.textContent='▼ '+Math.abs(d).toFixed(1)+' กก.'; chg.className='wchg down'; }
+    else if(d>0){ chg.textContent='▲ '+d.toFixed(1)+' กก.'; chg.className='wchg up'; }
+    else { chg.textContent='= เท่าเดิม'; chg.className='wchg same'; }
+    const t = Math.round((cur.kg - ws[0].kg)*10)/10;
+    tot.textContent = 'รวม '+(t>0?'+':'')+t.toFixed(1)+' กก. จากเริ่มต้น';
+  } else { chg.textContent='เริ่มต้น'; chg.className='wchg same'; tot.textContent=''; }
+  // SVG line chart (สูงสุด 20 จุดล่าสุด)
+  const pts = ws.slice(-20);
+  const W=300, H=100, pad=8;
+  let min=Math.min(...pts.map(p=>p.kg)), max=Math.max(...pts.map(p=>p.kg));
+  if(max-min<1){ const m=(max+min)/2; min=m-0.6; max=m+0.6; }
+  const X=i=> pts.length===1 ? W/2 : pad + i*(W-2*pad)/(pts.length-1);
+  const Y=v=> pad + (max-v)*(H-2*pad)/(max-min);
+  const line = pts.map((p,i)=>`${X(i).toFixed(1)},${Y(p.kg).toFixed(1)}`).join(' ');
+  const dots = pts.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.kg).toFixed(1)}" r="3" fill="#1a5fd4"><title>${thaiDate(p.date)} : ${p.kg} กก.</title></circle>`).join('');
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H+16}" preserveAspectRatio="none">
+    <polyline points="${line}" fill="none" stroke="#1a5fd4" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="${pad}" y="${H+12}" font-size="9" fill="#6b7f9e">${thaiDate(pts[0].date)}</text>
+    <text x="${W-pad}" y="${H+12}" font-size="9" fill="#6b7f9e" text-anchor="end">${thaiDate(pts[pts.length-1].date)}</text>
+  </svg>`;
+  // ประวัติ 6 รายการล่าสุด
+  hist.innerHTML='';
+  ws.slice(-6).reverse().forEach(w=>{
+    const div=document.createElement('div'); div.className='hitem';
+    div.innerHTML=`
+      <div class="badge" style="background:#0aa06e"></div>
+      <div class="hmain"><div class="t1">${w.kg.toFixed(1)} กก.</div><div class="t2">${thaiDate(w.date)}</div></div>
+      <button class="del" onclick="delWeight('${w.id}')">🗑</button>`;
+    hist.appendChild(div);
+  });
+}
+
+/* ---------- backup ---------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fitlog-backup-'+todayStr()+'.json';
+  a.click(); toast('Export แล้ว');
+}
+function importData(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const d = JSON.parse(r.result);
+      if(!Array.isArray(d.entries)) throw 0;
+      data = d; data.goal=data.goal||600; data.name=data.name||'ของฉัน'; data.weights=data.weights||[];
+      save(); buildMonthOptions(); renderAll(); toast('Import สำเร็จ');
+    }catch{ toast('ไฟล์ไม่ถูกต้อง'); }
+  };
+  r.readAsText(f); input.value='';
+}
+
+/* ---------- render ---------- */
+function renderAll(){ renderAvatar(); renderSummary(); renderChart(); renderWeight(); renderHistory(); }
+
+function renderSummary(){
+  $('userName').textContent = data.name;
+  const ym = todayStr().slice(0,7);
+  let m=0,c=0,all=0;
+  data.entries.forEach(e=>{ all+=e.minutes; if(e.date.startsWith(ym)){ m+=e.minutes; c++; } });
+  $('heroMin').textContent=m.toLocaleString(); $('heroCnt').textContent=c;
+  $('heroMonth').textContent='สะสม '+thaiMonth(ym);
+  const pct=Math.min(100,Math.round(m/data.goal*100));
+  $('goalFill').style.width=pct+'%';
+  $('goalTxt').textContent=`เป้าหมาย ${data.goal.toLocaleString()} นาที/เดือน · ทำได้ ${pct}%`;
+  // week (Mon-Sun)
+  const now=new Date(); const dow=(now.getDay()+6)%7; // Mon=0
+  const mon=new Date(now); mon.setDate(now.getDate()-dow);
+  const monS=dstr(mon);
+  let wk=0; data.entries.forEach(e=>{ if(e.date>=monS && e.date<=todayStr()) wk+=e.minutes; });
+  $('stWeek').textContent=wk.toLocaleString();
+  $('stAll').textContent=all.toLocaleString();
+  // streak
+  const days=new Set(data.entries.map(e=>e.date));
+  let streak=0; const d=new Date();
+  if(!days.has(dstr(d))) d.setDate(d.getDate()-1); // allow today not yet logged
+  while(days.has(dstr(d))){ streak++; d.setDate(d.getDate()-1); }
+  $('stStreak').textContent=streak;
+}
+
+function renderChart(){
+  const days=[]; const now=new Date();
+  for(let i=13;i>=0;i--){ const d=new Date(now); d.setDate(d.getDate()-i); days.push(dstr(d)); }
+  const map={}; days.forEach(d=>map[d]=0);
+  data.entries.forEach(e=>{ if(map[e.date]!==undefined) map[e.date]+=e.minutes; });
+  const max=Math.max(30,...days.map(d=>map[d]));
+  const wrap=$('chart'); wrap.innerHTML='';
+  days.forEach(d=>{
+    const bar=document.createElement('div'); bar.className='cbar';
+    if(map[d]>0){
+      const s=document.createElement('div'); s.className='seg'; s.style.height=(map[d]/max*100)+'%';
+      bar.appendChild(s);
+    }
+    const lb=document.createElement('div'); lb.className='day'; lb.textContent=parseInt(d.slice(8));
+    bar.appendChild(lb); bar.title=d+' : '+map[d]+' นาที';
+    wrap.appendChild(bar);
+  });
+}
+
+function buildMonthOptions(){
+  const sel=$('monthSel'); const cur=sel.value;
+  const months=new Set([todayStr().slice(0,7)]);
+  data.entries.forEach(e=>months.add(e.date.slice(0,7)));
+  const arr=[...months].sort().reverse();
+  sel.innerHTML='';
+  arr.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=thaiMonth(m); sel.appendChild(o); });
+  sel.value=arr.includes(cur)?cur:arr[0];
+}
+
+function renderHistory(){
+  const ym=$('monthSel').value||todayStr().slice(0,7);
+  const list=data.entries.filter(e=>e.date.startsWith(ym))
+    .sort((a,b)=> b.date.localeCompare(a.date) || b.ts-a.ts);
+  const wrap=$('history');
+  if(!list.length){ wrap.innerHTML='<div class="empty">ยังไม่มีข้อมูลเดือนนี้</div>'; return; }
+  wrap.innerHTML='';
+  list.forEach(e=>{
+    const div=document.createElement('div'); div.className='hitem';
+    div.innerHTML=`
+      <div class="badge"></div>
+      <div class="hmain">
+        <div class="t1">${e.activity}</div>
+        <div class="t2">${thaiDate(e.date)}</div>
+      </div>
+      <div class="hval">${e.minutes} นาที${e.count?`<small>${e.count} ครั้ง/เซ็ต</small>`:''}</div>
+      <button class="del" style="color:var(--blue)" onclick="shareEntry('${e.id}')">📤</button>
+      <button class="del" onclick="delEntry('${e.id}')">🗑</button>`;
+    wrap.appendChild(div);
+  });
+}
+
+/* ---------- utils ---------- */
+function todayStr(){ return dstr(new Date()); }
+function dstr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function thaiMonth(ym){ const [y,m]=ym.split('-'); return TH_M[+m-1]+' '+(+y+543); }
+function thaiDate(d){ const [y,m,dd]=d.split('-'); return +dd+' '+TH_M[+m-1]+' '+(+y+543); }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
+buildMonthOptions(); renderAll();
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
