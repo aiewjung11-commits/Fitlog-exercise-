@@ -326,11 +326,12 @@ async function makeCard(opt){
   ctx.beginPath(); ctx.moveTo(180,840); ctx.lineTo(W-180,840); ctx.stroke();
   // stats columns
   const n=opt.stats.length, colW=(W-240)/n;
+  const vf = n>=4 ? 52 : 62, lf = n>=4 ? 32 : 36;
   opt.stats.forEach((s,i)=>{
     const x=120+colW*i+colW/2;
-    ctx.font='700 62px '+FONT; ctx.fillStyle='#fff';
+    ctx.font='700 '+vf+'px '+FONT; ctx.fillStyle='#fff';
     ctx.fillText(String(s.v), x, 930);
-    ctx.font='400 36px '+FONT; ctx.fillStyle='rgba(255,255,255,.8)';
+    ctx.font='400 '+lf+'px '+FONT; ctx.fillStyle='rgba(255,255,255,.8)';
     ctx.fillText(s.l, x, 980);
   });
   // footer date
@@ -374,15 +375,17 @@ async function shareMonth(){
 async function shareEntry(id){
   const e=data.entries.find(x=>x.id===id); if(!e) return;
   const st=calcStats();
+  const stats=[
+    {v:e.count||'–', l:'ครั้ง/เซ็ต'},
+    {v:st.monthMin.toLocaleString(), l:'นาที เดือนนี้'},
+    {v:'🔥 '+st.streak, l:'วันติดต่อกัน'}
+  ];
+  if(data.weights.length) stats.push({v:'⚖️ '+data.weights[data.weights.length-1].kg.toFixed(1), l:'กก. ล่าสุด'});
   const cv=await makeCard({
     big: e.minutes.toLocaleString(),
     unit: 'นาที',
     sub: e.activity,
-    stats: [
-      {v:e.count||'–', l:'ครั้ง/เซ็ต'},
-      {v:st.monthMin.toLocaleString(), l:'นาที เดือนนี้'},
-      {v:'🔥 '+st.streak, l:'วันติดต่อกัน'}
-    ],
+    stats,
     footer: thaiDate(e.date)
   });
   doShare(cv);
